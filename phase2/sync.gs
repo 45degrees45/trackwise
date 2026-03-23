@@ -11,6 +11,7 @@
 
 const PROPS        = PropertiesService.getScriptProperties();
 const LAST_SYNC_KEY = 'TRACKWISE_LAST_SYNC';
+const MASTER_DATETIME_FORMAT = 'yyyy-mm-dd hh:mm:ss am/pm';
 
 const COL = {
   ID:              1,
@@ -55,6 +56,10 @@ function syncCompletedTasks() {
     logEvent(ss, 'ERROR', 'SYSTEM', 'MASTER sheet not found. Run Phase 1 setup first.', 0);
     return;
   }
+
+  // Ensure Created/Due/Completed columns always show full timestamp.
+  // This keeps completion time visible even on older sheets with date-only formats.
+  ensureMasterDateTimeFormats(master);
 
   // Determine sync window
   const rawLastSync = PROPS.getProperty(LAST_SYNC_KEY);
@@ -218,7 +223,9 @@ function findPendingRow(masterData, title) {
  */
 function markRowCompleted(master, sheetRow, completedAt) {
   master.getRange(sheetRow, COL.STATUS).setValue(STATUS.COMPLETED);
-  master.getRange(sheetRow, COL.COMPLETED_DATE).setValue(completedAt);
+  master.getRange(sheetRow, COL.COMPLETED_DATE)
+    .setValue(completedAt)
+    .setNumberFormat(MASTER_DATETIME_FORMAT);
 }
 
 /**
@@ -357,9 +364,19 @@ function appendRow(master, rowData) {
   );
 
   // Format date cells in the new row
-  master.getRange(r, COL.CREATED_DATE).setNumberFormat('yyyy-mm-dd hh:mm');
-  master.getRange(r, COL.DUE_DATE).setNumberFormat('yyyy-mm-dd hh:mm');
-  master.getRange(r, COL.COMPLETED_DATE).setNumberFormat('yyyy-mm-dd hh:mm');
+  master.getRange(r, COL.CREATED_DATE).setNumberFormat(MASTER_DATETIME_FORMAT);
+  master.getRange(r, COL.DUE_DATE).setNumberFormat(MASTER_DATETIME_FORMAT);
+  master.getRange(r, COL.COMPLETED_DATE).setNumberFormat(MASTER_DATETIME_FORMAT);
+}
+
+/**
+ * Applies a consistent datetime display for MASTER date columns:
+ * I (Created), J (Due), K (Completed).
+ */
+function ensureMasterDateTimeFormats(master) {
+  master.getRange(2, COL.CREATED_DATE,   999, 1).setNumberFormat(MASTER_DATETIME_FORMAT);
+  master.getRange(2, COL.DUE_DATE,       999, 1).setNumberFormat(MASTER_DATETIME_FORMAT);
+  master.getRange(2, COL.COMPLETED_DATE, 999, 1).setNumberFormat(MASTER_DATETIME_FORMAT);
 }
 
 /**

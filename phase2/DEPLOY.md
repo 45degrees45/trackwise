@@ -15,7 +15,7 @@ Extensions → Apps Script
 ### 2. Enable the Tasks API
 Left sidebar → Services (+ icon) → Tasks API → Version v1 → Add
 
-Without this step, the script cannot read Google Tasks.
+Without this step, the script cannot read Google Tasks (including tasks you complete from Google Calendar's Tasks panel).
 
 ### 3. Add sync.gs
 In Apps Script editor:
@@ -52,7 +52,7 @@ This registers the 10-minute automatic sync. Done.
 ### Matched tasks (Task / Project Milestone)
 Finds the row in MASTER with matching Title + Status=Pending
 → Updates Status to Completed
-→ Sets Completed Date
+→ Sets Completed Date + Time (with seconds, AM/PM)
 
 ### Matched habits
 Finds the Habit definition row (stays Pending — it's the recurring definition)
