@@ -64,52 +64,63 @@ function syncCompletionTimes() {
   const props = PropertiesService.getScriptProperties();
   const cursor = props.getProperty(SYNC_CURSOR_KEY) || '2020-01-01T00:00:00.000Z';
 
-  const taskLists = Tasks.Tasklists.list({ maxResults: 100 }).getItems() || [];
+  const existingData = sheet.getDataRange().getValues();
+  const seen = new Set(existingData.slice(1).map(r => `${r[1]}|${r[3]}`));
+  let currentId = existingData.length <= 1 ? 0 : existingData[existingData.length - 1][0];
+
   let newCount = 0;
 
-  for (const list of taskLists) {
-    const listId   = list.getId();
-    const listName = list.getTitle();
-    let pageToken  = null;
+  try {
+    const taskLists = Tasks.Tasklists.list({ maxResults: 100 }).getItems() || [];
 
-    do {
-      const params = {
-        maxResults:    100,
-        showCompleted: true,
-        showHidden:    true,
-        completedMin:  cursor,
-        pageToken:     pageToken || undefined
-      };
-      const result = Tasks.Tasks.list(listId, params);
-      const items  = result.getItems() || [];
+    for (const list of taskLists) {
+      const listId   = list.getId();
+      const listName = list.getTitle();
+      let pageToken  = null;
 
-      for (const task of items) {
-        if (task.getStatus() !== 'completed') continue;
-        const completed = task.getCompleted();
-        if (!completed) continue;
+      do {
+        const params = {
+          maxResults:    100,
+          showCompleted: true,
+          showHidden:    true,
+          completedMin:  cursor,
+          pageToken:     pageToken || undefined
+        };
+        const result = Tasks.Tasks.list(listId, params);
+        const items  = result.getItems() || [];
 
-        const p = parseTaskTimestamp(completed);
-        if (isDuplicate(sheet, task.getTitle(), p.dateStr)) continue;
+        for (const task of items) {
+          if (task.getStatus() !== 'completed') continue;
+          const completed = task.getCompleted();
+          if (!completed) continue;
 
-        sheet.appendRow([
-          nextId(sheet),
-          task.getTitle(),
-          listName,
-          p.dateStr,
-          p.timeStr,
-          p.hour,
-          p.dow,
-          p.weekNo,
-          p.month,
-          p.monthNo,
-          p.year
-        ]);
-        newCount++;
-      }
-      pageToken = result.getNextPageToken();
-    } while (pageToken);
+          const p = parseTaskTimestamp(completed);
+          const key = `${task.getTitle()}|${p.dateStr}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          sheet.appendRow([
+            ++currentId,
+            task.getTitle(),
+            listName,
+            p.dateStr,
+            p.timeStr,
+            p.hour,
+            p.dow,
+            p.weekNo,
+            p.month,
+            p.monthNo,
+            p.year
+          ]);
+          newCount++;
+        }
+        pageToken = result.getNextPageToken();
+      } while (pageToken);
+    }
+
+    props.setProperty(SYNC_CURSOR_KEY, new Date().toISOString());
+    Logger.log(`syncCompletionTimes: added ${newCount} rows`);
+  } catch (e) {
+    Logger.log(`syncCompletionTimes error: ${e.message}`);
   }
-
-  props.setProperty(SYNC_CURSOR_KEY, new Date().toISOString());
-  Logger.log(`syncCompletionTimes: added ${newCount} rows`);
 }
