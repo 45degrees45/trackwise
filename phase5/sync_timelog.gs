@@ -1,4 +1,10 @@
+/**
+ * TrackWise Phase 5 — Task completion sync
+ * Polls all Google Tasks lists every 10 min and appends completions to TIME_LOG sheet.
+ */
+
 const TIME_LOG_SHEET = 'TIME_LOG';
+// Persists the last sync timestamp via PropertiesService across executions
 const SYNC_CURSOR_KEY = 'timelog_sync_cursor';
 
 function setupTimeLogSheet() {
@@ -15,11 +21,9 @@ function setupTimeLogSheet() {
     'Hour', 'Day of Week', 'Week No',
     'Month', 'Month No', 'Year'
   ];
-  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  sheet.getRange(1, 1, 1, headers.length)
-    .setBackground('#1a1a2e')
-    .setFontColor('#4ade80')
-    .setFontWeight('bold');
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setValues([headers]);
+  headerRange.setBackground('#1a1a2e').setFontColor('#4ade80').setFontWeight('bold');
   sheet.setFrozenRows(1);
   Logger.log('TIME_LOG sheet created');
 }
