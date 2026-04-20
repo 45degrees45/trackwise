@@ -124,3 +124,17 @@ function syncCompletionTimes() {
     Logger.log(`syncCompletionTimes error: ${e.message}`);
   }
 }
+
+function setupTimeTrigger() {
+  // Remove any existing timelog triggers to avoid duplicates
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'syncCompletionTimes')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+
+  ScriptApp.newTrigger('syncCompletionTimes')
+    .timeBased()
+    .everyMinutes(10)
+    .create();
+
+  Logger.log('10-minute trigger registered for syncCompletionTimes');
+}
