@@ -1,0 +1,42 @@
+<h2>TrackWise — Task Completion Timing</h2>
+<p class="subtitle">When you strike off a task in Google Tasks → log time → dashboard in Google Sheets</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Fix + Extend Phase 2 (Apps Script only)</h3>
+      <p>Fix the existing sync.gs to read from ALL Google Tasks lists (including Chrome OS Focus tasks). Add a new <strong>TIME_LOG</strong> sheet that records task name + exact completion time. Build a dashboard tab with time-of-day charts.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Zero new infrastructure</li><li>Runs on Google's servers — Ubuntu machine doesn't need to be on</li><li>Free forever</li><li>Everything in one Google Sheet</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Polling every 10 min — not real-time</li><li>Apps Script has execution limits</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Dedicated TIME_LOG Sheet + Charts Dashboard</h3>
+      <p>Keep MASTER as-is. Add a separate <strong>TIME_LOG</strong> sheet just for timing data. A new Apps Script writes: Task Name, List, Completed Date, Completed Time, Hour of Day, Day of Week. Dashboard tab shows heatmaps and completion trends.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Clean separation — MASTER for tasks, TIME_LOG for analytics</li><li>Easier to build charts</li><li>Still zero cost</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Two sheets to maintain</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Apps Script + Looker Studio Dashboard</h3>
+      <p>Apps Script logs completion times to Sheets. Connect Looker Studio (free, by Google) for richer charts — hourly heatmaps, weekly trends, streak visualizations — without building charts manually in Sheets.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Professional dashboard visuals</li><li>Zero cost (Looker Studio is free)</li><li>Live updates</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Extra setup (Looker Studio connection)</li><li>Dashboard is a separate URL</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem">My recommendation: <strong>Option B</strong> — clean separation, zero cost, everything in Google Sheets. Chrome OS Focus task sync fix included.</p>

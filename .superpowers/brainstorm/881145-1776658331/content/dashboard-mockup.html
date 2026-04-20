@@ -1,0 +1,84 @@
+<h2>Dashboard Layout Options</h2>
+<p class="subtitle">What should your task completion dashboard show?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Daily Summary View</h3>
+      <div class="mockup">
+        <div class="mockup-header">DASHBOARD — Today</div>
+        <div class="mockup-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="background:#1a1a2e;border:1px solid #333;padding:10px;border-radius:6px;text-align:center">
+              <div style="font-size:1.6rem;font-weight:bold;color:#4ade80">7</div>
+              <div style="font-size:0.7rem;color:#888">Tasks Today</div>
+            </div>
+            <div style="background:#1a1a2e;border:1px solid #333;padding:10px;border-radius:6px;text-align:center">
+              <div style="font-size:1.6rem;font-weight:bold;color:#60a5fa">9:30 AM</div>
+              <div style="font-size:0.7rem;color:#888">Peak Hour</div>
+            </div>
+            <div style="background:#1a1a2e;border:1px solid #333;padding:10px;border-radius:6px;text-align:center">
+              <div style="font-size:1.6rem;font-weight:bold;color:#f59e0b">Mon</div>
+              <div style="font-size:0.7rem;color:#888">Best Day</div>
+            </div>
+          </div>
+          <div style="background:#1a1a2e;border:1px solid #333;padding:8px;border-radius:6px;font-size:0.75rem;color:#aaa">
+            <div style="color:#888;margin-bottom:4px">COMPLETED TODAY</div>
+            <div style="color:#4ade80">✓ Write phase 4 deploy guide — 9:15 AM</div>
+            <div style="color:#4ade80">✓ Fix sync bug — 10:30 AM</div>
+            <div style="color:#4ade80">✓ Review PRD — 2:45 PM</div>
+          </div>
+        </div>
+      </div>
+      <p>Shows today's count, peak hour, best day of week + recent completions list</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Weekly Heatmap View</h3>
+      <div class="mockup">
+        <div class="mockup-header">DASHBOARD — This Week</div>
+        <div class="mockup-body">
+          <div style="font-size:0.7rem;color:#888;margin-bottom:6px">TASKS COMPLETED BY HOUR</div>
+          <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-bottom:8px">
+            <div style="background:#1e3a1e;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">6a</div>
+            <div style="background:#1e3a1e;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">7a</div>
+            <div style="background:#166534;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">8a</div>
+            <div style="background:#15803d;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#fff">9a</div>
+            <div style="background:#4ade80;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#000">10a</div>
+            <div style="background:#166534;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">11a</div>
+            <div style="background:#1e3a1e;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">12p</div>
+            <div style="background:#1e3a1e;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">1p</div>
+            <div style="background:#166534;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">2p</div>
+            <div style="background:#15803d;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#fff">3p</div>
+            <div style="background:#1e3a1e;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">4p</div>
+            <div style="background:#1e3a1e;padding:4px;border-radius:2px;text-align:center;font-size:0.6rem;color:#4ade80">5p</div>
+          </div>
+          <div style="font-size:0.7rem;color:#888;margin-bottom:4px">THIS WEEK</div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+            <div style="background:#15803d;padding:6px;border-radius:2px;text-align:center;font-size:0.65rem;color:#fff">Mon<br>8</div>
+            <div style="background:#4ade80;padding:6px;border-radius:2px;text-align:center;font-size:0.65rem;color:#000">Tue<br>12</div>
+            <div style="background:#166534;padding:6px;border-radius:2px;text-align:center;font-size:0.65rem;color:#4ade80">Wed<br>5</div>
+            <div style="background:#15803d;padding:6px;border-radius:2px;text-align:center;font-size:0.65rem;color:#fff">Thu<br>9</div>
+            <div style="background:#1e3a1e;padding:6px;border-radius:2px;text-align:center;font-size:0.65rem;color:#4ade80">Fri<br>3</div>
+            <div style="background:#1a1a2e;padding:6px;border-radius:2px;text-align:center;font-size:0.65rem;color:#555">Sat<br>0</div>
+            <div style="background:#1a1a2e;padding:6px;border-radius:2px;text-align:center;font-size:0.65rem;color:#555">Sun<br>0</div>
+          </div>
+        </div>
+      </div>
+      <p>Hour-of-day heatmap + day-of-week bar — shows your peak productivity windows</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Both — Combined Dashboard</h3>
+      <p>Top section: today's metrics (count, peak hour, streak). Middle: weekly heatmap. Bottom: recent completions list with timestamps.</p>
+      <p style="color:#4ade80">Full picture at a glance — most useful but takes more sheet space.</p>
+    </div>
+  </div>
+</div>

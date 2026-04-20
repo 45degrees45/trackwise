@@ -1,0 +1,104 @@
+<h2>TrackWise Phase 5 — Design Spec</h2>
+<p class="subtitle">Task Completion Timing & Dashboard &nbsp;|&nbsp; 2026-04-20</p>
+
+<div class="section">
+  <h3>Problem</h3>
+  <ol style="color:#94a3b8;line-height:1.8">
+    <li>Tasks completed via <strong style="color:#f8fafc">Chrome OS Flex Focus mode</strong> are not appearing in the MASTER sheet. Root cause: Phase 2 <code style="background:#1e293b;padding:2px 6px;border-radius:3px">sync.gs</code> only reads the default Google Tasks list — Focus mode uses a separate list.</li>
+    <li>No time-based analytics — no way to see <em>when</em> tasks are completed (hour of day, day of week, month, year).</li>
+  </ol>
+</div>
+
+<div class="section">
+  <h3>Architecture</h3>
+  <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:16px;font-family:monospace;font-size:0.8rem;color:#94a3b8;line-height:2">
+    Google Tasks (ALL lists, including Chrome OS Focus)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓ &nbsp;every 10 min (Apps Script time trigger)<br>
+    &nbsp;&nbsp;<span style="color:#4ade80">sync_timelog.gs</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+    &nbsp;&nbsp;<span style="color:#60a5fa">TIME_LOG sheet</span> &nbsp;←── source of truth for analytics<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓ &nbsp;COUNTIFS / FILTER formulas<br>
+    &nbsp;&nbsp;<span style="color:#f59e0b">DASHBOARD sheet</span>
+  </div>
+  <p style="color:#64748b;font-size:0.8rem;margin-top:6px">Zero cost — runs on Google's servers. Ubuntu machine does not need to be on.</p>
+</div>
+
+<div class="section">
+  <h3>TIME_LOG Sheet — Columns</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:0.8rem">
+    <tr style="background:#1e293b;color:#94a3b8">
+      <th style="padding:6px 10px;text-align:left;border-radius:4px 0 0 0">Col</th>
+      <th style="padding:6px 10px;text-align:left">Header</th>
+      <th style="padding:6px 10px;text-align:left;border-radius:0 4px 0 0">Description</th>
+    </tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">A</td><td style="padding:5px 10px;color:#4ade80">ID</td><td style="padding:5px 10px">Auto-increment</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">B</td><td style="padding:5px 10px;color:#4ade80">Task Name</td><td style="padding:5px 10px">Title from Google Tasks</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">C</td><td style="padding:5px 10px;color:#4ade80">Task List</td><td style="padding:5px 10px">Which list (e.g. "My Tasks", "Focus")</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">D</td><td style="padding:5px 10px;color:#4ade80">Completed Date</td><td style="padding:5px 10px">YYYY-MM-DD</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">E</td><td style="padding:5px 10px;color:#4ade80">Completed Time</td><td style="padding:5px 10px">HH:MM AM/PM</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">F</td><td style="padding:5px 10px;color:#4ade80">Hour</td><td style="padding:5px 10px">0–23 integer (for heatmap formulas)</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">G</td><td style="padding:5px 10px;color:#4ade80">Day of Week</td><td style="padding:5px 10px">Mon / Tue / Wed…</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">H</td><td style="padding:5px 10px;color:#4ade80">Week No</td><td style="padding:5px 10px">ISO week number</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">I</td><td style="padding:5px 10px;color:#4ade80">Month</td><td style="padding:5px 10px">Jan / Feb / Mar…</td></tr>
+    <tr style="border-bottom:1px solid #1e293b;color:#cbd5e1"><td style="padding:5px 10px">J</td><td style="padding:5px 10px;color:#4ade80">Month No</td><td style="padding:5px 10px">1–12 integer</td></tr>
+    <tr style="color:#cbd5e1"><td style="padding:5px 10px">K</td><td style="padding:5px 10px;color:#4ade80">Year</td><td style="padding:5px 10px">e.g. 2026</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>sync_timelog.gs — Behaviour</h3>
+  <ul style="color:#94a3b8;line-height:1.9;font-size:0.85rem">
+    <li>Fetches <strong style="color:#f8fafc">all task lists</strong> via <code style="background:#1e293b;padding:2px 6px;border-radius:3px">Tasks.Tasklists.list()</code> — catches Focus mode tasks</li>
+    <li>Fetches completions since last sync cursor (stored in <code style="background:#1e293b;padding:2px 6px;border-radius:3px">PropertiesService</code>)</li>
+    <li>Appends rows to TIME_LOG with full timestamp breakdown</li>
+    <li>Idempotent — checks Task Name + Completed Date before inserting</li>
+    <li>Registers 10-min time trigger on first run via <code style="background:#1e293b;padding:2px 6px;border-radius:3px">setupTimeTrigger()</code></li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>DASHBOARD — Sections</h3>
+  <ul style="color:#94a3b8;line-height:1.9;font-size:0.85rem">
+    <li><span style="color:#4ade80">Today Stats</span> — tasks today, this week, peak hour, day streak</li>
+    <li><span style="color:#60a5fa">Weekly Hour Heatmap</span> — 6am–7pm, green scale by count</li>
+    <li><span style="color:#f59e0b">Monthly Day Heatmap</span> — calendar grid, current month</li>
+    <li><span style="color:#a78bfa">Yearly Month Heatmap</span> — Jan–Dec bar, current month highlighted</li>
+    <li><span style="color:#94a3b8">Recent Completions</span> — last 10 tasks with timestamps</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>Files to Create</h3>
+  <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:12px;font-family:monospace;font-size:0.8rem;color:#94a3b8;line-height:1.8">
+    trackwise/<br>
+    └── <span style="color:#4ade80">phase5/</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;├── <span style="color:#60a5fa">DEPLOY.md</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— step-by-step guide<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;└── <span style="color:#60a5fa">sync_timelog.gs</span> — paste into Apps Script editor
+  </div>
+</div>
+
+<div class="section">
+  <h3>Deployment Steps</h3>
+  <ol style="color:#94a3b8;line-height:1.9;font-size:0.85rem">
+    <li>Open TrackWise Google Sheet → Extensions → Apps Script</li>
+    <li>Create new file <code style="background:#1e293b;padding:2px 6px;border-radius:3px">sync_timelog</code> → paste script</li>
+    <li>Run <code style="background:#1e293b;padding:2px 6px;border-radius:3px">setupTimeTrigger()</code> once — creates 10-min trigger + TIME_LOG sheet</li>
+    <li>Enable Tasks API: Services → Tasks API v1</li>
+    <li>Run <code style="background:#1e293b;padding:2px 6px;border-radius:3px">syncCompletionTimes()</code> manually once to backfill</li>
+    <li>Create DASHBOARD sheet, paste formula blocks from DEPLOY.md</li>
+    <li>Verify Chrome OS Focus tasks appear in TIME_LOG</li>
+  </ol>
+</div>
+
+<div class="section">
+  <h3>Success Criteria</h3>
+  <ul style="color:#94a3b8;line-height:1.9;font-size:0.85rem">
+    <li>Chrome OS Flex Focus completions appear in TIME_LOG within 10 min</li>
+    <li>DASHBOARD shows correct counts for today / this week</li>
+    <li>All 4 heatmaps reflect real data</li>
+    <li>No duplicate rows on repeated sync</li>
+    <li>Runs without Ubuntu machine being on</li>
+  </ul>
+</div>
+
+<p class="subtitle" style="margin-top:1rem">Any changes needed, or shall we proceed to the implementation plan?</p>
