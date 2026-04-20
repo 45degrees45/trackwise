@@ -27,3 +27,89 @@ function setupTimeLogSheet() {
   sheet.setFrozenRows(1);
   Logger.log('TIME_LOG sheet created');
 }
+
+function parseTaskTimestamp(isoString) {
+  // Google Tasks returns ISO 8601: "2026-04-20T10:22:00.000Z"
+  const d = new Date(isoString);
+  const tz = Session.getScriptTimeZone(); // respects Sheet timezone
+  const dateStr = Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  const timeStr = Utilities.formatDate(d, tz, 'hh:mm a');
+  const hour    = parseInt(Utilities.formatDate(d, tz, 'H'), 10);
+  const dow     = Utilities.formatDate(d, tz, 'EEE');   // Mon, Tue...
+  const weekNo  = parseInt(Utilities.formatDate(d, tz, 'w'), 10);
+  const month   = Utilities.formatDate(d, tz, 'MMM');   // Jan, Feb...
+  const monthNo = parseInt(Utilities.formatDate(d, tz, 'M'), 10);
+  const year    = parseInt(Utilities.formatDate(d, tz, 'yyyy'), 10);
+  return { dateStr, timeStr, hour, dow, weekNo, month, monthNo, year };
+}
+
+function isDuplicate(sheet, taskName, dateStr) {
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] === taskName && data[i][3] === dateStr) return true;
+  }
+  return false;
+}
+
+function nextId(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 1;
+  return sheet.getRange(lastRow, 1).getValue() + 1;
+}
+
+function syncCompletionTimes() {
+  setupTimeLogSheet();
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(TIME_LOG_SHEET);
+  const props = PropertiesService.getScriptProperties();
+  const cursor = props.getProperty(SYNC_CURSOR_KEY) || '2020-01-01T00:00:00.000Z';
+
+  const taskLists = Tasks.Tasklists.list({ maxResults: 100 }).getItems() || [];
+  let newCount = 0;
+
+  for (const list of taskLists) {
+    const listId   = list.getId();
+    const listName = list.getTitle();
+    let pageToken  = null;
+
+    do {
+      const params = {
+        maxResults:    100,
+        showCompleted: true,
+        showHidden:    true,
+        completedMin:  cursor,
+        pageToken:     pageToken || undefined
+      };
+      const result = Tasks.Tasks.list(listId, params);
+      const items  = result.getItems() || [];
+
+      for (const task of items) {
+        if (task.getStatus() !== 'completed') continue;
+        const completed = task.getCompleted();
+        if (!completed) continue;
+
+        const p = parseTaskTimestamp(completed);
+        if (isDuplicate(sheet, task.getTitle(), p.dateStr)) continue;
+
+        sheet.appendRow([
+          nextId(sheet),
+          task.getTitle(),
+          listName,
+          p.dateStr,
+          p.timeStr,
+          p.hour,
+          p.dow,
+          p.weekNo,
+          p.month,
+          p.monthNo,
+          p.year
+        ]);
+        newCount++;
+      }
+      pageToken = result.getNextPageToken();
+    } while (pageToken);
+  }
+
+  props.setProperty(SYNC_CURSOR_KEY, new Date().toISOString());
+  Logger.log(`syncCompletionTimes: added ${newCount} rows`);
+}
